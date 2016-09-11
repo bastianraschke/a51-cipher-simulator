@@ -48,7 +48,7 @@ div.highlighted
 {
     background: #FFD18D;
     border: 1px dashed black;
-    padding: 10px 10px 0 10px;
+    padding: 10px 10px 10px 10px;
     margin: 0 0 10px 0;
     width: 700px;
 }

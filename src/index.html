@@ -2,9 +2,9 @@
 <html>
 <head>
 
-    <!-- Simulator version: 1.1 -->
+    <!-- Simulator version: 1.2 (CrypTool-Anpassung) -->
 
-    <title>Interaktive Online-Simulation des A5/1 Ciphers</title>
+    <title>Interaktive Online-Simulation der A5/1-Chiffre</title>
     <meta charset="UTF-8" />
 
     <link rel="stylesheet" href="./resources/styles.css">
@@ -23,8 +23,26 @@
 
 <body>
 
-    <h1>Interaktive Online-Simulation des A5/1 Ciphers</h1>
-    <p>für das Fach &quot;IT-Sicherheit mobiler Systeme&quot; bei Prof. Konstantin Knorr an der <a href="https://www.hochschule-trier.de/">Hochschule Trier</a>.</p>
+    <h1>Interaktive Online-Simulation der A5/1-Chiffre</h1>
+    <p>für das Fach &quot;IT-Sicherheit mobiler Systeme&quot; an der <a href="https://www.hochschule-trier.de/">Hochschule Trier</a>.</p>
+
+    <div class="highlighted">
+
+        A5/1 ist eine Stromchiffre, die 1987 entwickelt wurde, um die Sprachkommunikation in Mobilfunknetzen nach dem GSM-Standard zu schützen. Sie gilt inzwischen als gebrochen.
+
+        <p>Dies ist eine vereinfachte Simulation der Chiffre (ohne den "Frame Counter"-Schritt vor der Registerinitialisierung). Sie besteht aus drei aufeinander folgenden Schritten:</p>
+
+        <ol>
+            <li>Zunächst muss der Schlüssel vollständig eingelesen werden (64 Einzelschritte, da 64 Bit)</li>
+            <li>Dann wird das Register initialisiert (100 Einzelschritte)</li>
+            <li>Nun kann ein beliebig langer Schlüsselstrom erzeugt werden</li>
+        </ol>
+
+        Der Schlüsselstrom wird beim Sender mit dem Klartext verknüpft (XOR) und dadurch der Geheimtext gebildet, der dann übertragen werden kann. Beim Empfänger wird der gleiche Schlüsselstrom gebildet und dieser dann mit dem Geheimtext verknüpft, um daraus wieder der Klartext erhalten.
+
+        <p><strong>Tipp:</strong> Wenn man bei den Schritten nicht hunderte Male klicken möchte, dann setzt man z.B. mit einem Klick auf den gewünschten Button den Fokus und kann daraufhin mit gehaltenen Enter-Taste weiterlaufen.</p>
+
+    </div>
 
     <div class="highlighted">
 
@@ -36,7 +54,8 @@
         <span id="registerInitializationCount">0/100</span>
         <input type="submit" id="generateStreamButton" value="(3) Schlüsselstrom erzeugen &raquo;" disabled="disabled" />
 
-        <p style="color: blue;">maj(<span style="color: red;">x<sub>8</sub></span>, <span style="color: red;">y<sub>10</sub></span>, <span style="color: red;">z<sub>10</sub></span>) = <span id="majResult" style="font-weight: bold;">0</span></p>
+        <p style="color: blue;">maj(<span style="color: red;">x<sub>8</sub></span>, <span style="color: red;">y<sub>10</sub></span>, <span style="color: red;">z<sub>10</sub></span>) = maj(<span style="color: red;" id="maj_x">0</span>, <span style="color: red;" id="maj_y">0</span>, <span style="color: red;" id="maj_z">0</span>)
+        = <span id="majResult" style="font-weight: bold;">0</span></p>
 
     </div>
 
@@ -231,6 +250,10 @@
 
     <script>
 
+        $(document).ready(function () {
+            resetForms();
+        });
+
         // Write cipher key to document
         for (var i = 0; i < key.length; i++)
         {
@@ -422,8 +445,11 @@
             shiftRegister2(inputValue);
             shiftRegister3(inputValue);
 
-            // Calculate maj() function
+            // Calculate maj() function and update spans
             $('#majResult').text(maj($('input[name=r1_8]').val(), $('input[name=r2_10]').val(), $('input[name=r3_10]').val()));
+            $('#maj_x').text($('input[name=r1_8]').val());
+            $('#maj_y').text($('input[name=r2_10]').val());
+            $('#maj_z').text($('input[name=r3_10]').val());
         });
 
         var registerInitializationCount = 0;
@@ -500,7 +526,12 @@
 
             // Calculate maj() function for the next step
             var majorValueNextStep = maj(majorValueNextStepR1, majorValueNextStepR2, majorValueNextStepR3);
+
+            // and update spans
             $('#majResult').text(majorValueNextStep);
+            $('#maj_x').text(majorValueNextStepR1);
+            $('#maj_y').text(majorValueNextStepR2);
+            $('#maj_z').text(majorValueNextStepR3);
 
             // Register 1 will be clocked next step?
             if ( majorValueNextStepR1 == majorValueNextStep )
@@ -611,7 +642,12 @@
 
             // Calculate maj() function for the next step
             var majorValueNextStep = maj(majorValueNextStepR1, majorValueNextStepR2, majorValueNextStepR3);
+
+            // and update spans
             $('#majResult').text(majorValueNextStep);
+            $('#maj_x').text(majorValueNextStepR1);
+            $('#maj_y').text(majorValueNextStepR2);
+            $('#maj_z').text(majorValueNextStepR3);
 
             // Register 1 will be clocked next step?
             if ( majorValueNextStepR1 == majorValueNextStep )
