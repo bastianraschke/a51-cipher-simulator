@@ -2,7 +2,7 @@
 <html>
 <head>
 
-    <!-- Simulator version: 1.0 -->
+    <!-- Simulator version: 1.1 -->
 
     <title>Interaktive Online-Simulation des A5/1 Ciphers</title>
     <meta charset="UTF-8" />
@@ -33,7 +33,7 @@
 
         <input type="submit" id="initializeKeyButton" value="(1) Schlüssel einlesen &raquo;" />
         <input type="submit" id="initializeRegisterButton" value="(2) Register initialisieren &raquo;" disabled="disabled" />
-        <span id="registerInitializationCount">1/100</span>
+        <span id="registerInitializationCount">0/100</span>
         <input type="submit" id="generateStreamButton" value="(3) Schlüsselstrom erzeugen &raquo;" disabled="disabled" />
 
         <p style="color: blue;">maj(<span style="color: red;">x<sub>8</sub></span>, <span style="color: red;">y<sub>10</sub></span>, <span style="color: red;">z<sub>10</sub></span>) = <span id="majResult" style="font-weight: bold;">0</span></p>
@@ -223,7 +223,7 @@
 
         </div>
 
-        <p><strong>Erklärung:</strong> Ein <span style="color: blue;">blaues Register</span> zeigt an, dass das Register im letzten Schritt weitergeschoben wurde, da dessen <span style="color: red;">roter Registerwert</span> der maj()-Funktion entsprochen hat und das Register somit &quot;im Takt&quot; (engl. &quot;clocked&quot;) war. Ansonsten wird das Register nicht weitergeschoben.</p>
+        <p><strong>Erklärung:</strong> Ein <span style="color: blue;">blaues Register</span> zeigt an, dass das Register im nächsten Schritt weitergeschoben wird, da dessen <span style="color: red;">roter Registerwert</span> der maj()-Funktion entspricht und das Register somit &quot;im Takt&quot; (engl. &quot;clocked&quot;) ist. Ansonsten wird das Register nicht weitergeschoben.</p>
 
     </div>
 
@@ -247,7 +247,7 @@
             }
         }
 
-        // Highlight first element
+        // Manual highlight first element
         $('#key_0').attr('style', 'font-weight: bold;');
 
         /*
@@ -404,13 +404,16 @@
             // Key is complete?
             if ( keyBitCount == 64 )
             {
-                // Disable this step
+                // Disable this feature
                 $('#initializeKeyButton').prop('disabled', true);
 
-                // Enable next step
+                // Enable next feature
                 $('#initializeRegisterButton').prop('disabled', false);
 
-                // Unhighlight last element
+                // Manual trigger next feature
+                $('#initializeRegisterButton').trigger('click');
+
+                // Manual unhighlight last element
                 $('#key_' + (keyBitCount - 1)).attr('style', 'font-weight: normal;');
             }
 
@@ -423,7 +426,7 @@
             $('#majResult').text(maj($('input[name=r1_8]').val(), $('input[name=r2_10]').val(), $('input[name=r3_10]').val()));
         });
 
-        var registerInitializationCount = 1;
+        var registerInitializationCount = 0;
 
         /*
          * (2)
@@ -440,53 +443,92 @@
             // Register is initialized?
             if ( registerInitializationCount == 100 )
             {
-                // Disable this step
+                // Disable this feature
                 $('#initializeRegisterButton').prop('disabled', true);
 
-                // Enable next step
+                // Enable next feature
                 $('#generateStreamButton').prop('disabled', false);
             }
 
-            // Calculate maj() function before shift operations
-            var majorValue = maj($('input[name=r1_8]').val(), $('input[name=r2_10]').val(), $('input[name=r3_10]').val());
-            $('#majResult').text(majorValue);
+            // Calculate maj() function for the current step
+            var majorValueThisStep = maj($('input[name=r1_8]').val(), $('input[name=r2_10]').val(), $('input[name=r3_10]').val());
 
             // Register 1 is clocked?
-            if ( $('input[name=r1_8]').val() == majorValue )
+            if ( $('input[name=r1_8]').val() == majorValueThisStep )
             {
-                // Indicate that register 1 is clocked
-                $('#r1').attr('style', 'color: blue;');
+                // Register 1 will be shifted, so use the futur value
+                var majorValueNextStepR1 = $('input[name=r1_7]').val();
 
                 // Shift clocked register (do not push a value to register; 0 is the neutral element of XOR)
                 shiftRegister1(0);
             }
             else
             {
-                $('#r1').attr('style', 'color: black;');
+                // Register 1 will not be shifted, so use the current value
+                var majorValueNextStepR1 = $('input[name=r1_8]').val();
             }
 
             // Register 2 is clocked?
-            if ( $('input[name=r2_10]').val() == majorValue )
+            if ( $('input[name=r2_10]').val() == majorValueThisStep )
             {
-                // Indicate that register 2 is clocked
-                $('#r2').attr('style', 'color: blue;');
+                // Register 2 will be shifted, so use the futur value
+                var majorValueNextStepR2 = $('input[name=r2_9]').val();
 
                 // Shift clocked register (do not push a value to register; 0 is the neutral element of XOR)
                 shiftRegister2(0);
             }
             else
             {
-                $('#r2').attr('style', 'color: black;');
+                // Register 2 will not be shifted, so use the current value
+                var majorValueNextStepR2 = $('input[name=r2_10]').val();
             }
 
             // Register 3 is clocked?
-            if ( $('input[name=r3_10]').val() == majorValue )
+            if ( $('input[name=r3_10]').val() == majorValueThisStep )
             {
-                // Indicate that register 3 is clocked
-                $('#r3').attr('style', 'color: blue;');
+                // Register 3 will be shifted, so use the futur value
+                var majorValueNextStepR3 = $('input[name=r3_9]').val();
 
                 // Shift clocked register (do not push a value to register; 0 is the neutral element of XOR)
                 shiftRegister3(0);
+            }
+            else
+            {
+                // Register 3 will not be shifted, so use the current value
+                var majorValueNextStepR3 = $('input[name=r3_10]').val();
+            }
+
+            // Calculate maj() function for the next step
+            var majorValueNextStep = maj(majorValueNextStepR1, majorValueNextStepR2, majorValueNextStepR3);
+            $('#majResult').text(majorValueNextStep);
+
+            // Register 1 will be clocked next step?
+            if ( majorValueNextStepR1 == majorValueNextStep )
+            {
+                // Indicate that register 1 will be clocked next step
+                $('#r1').attr('style', 'color: blue;');
+            }
+            else
+            {
+                $('#r1').attr('style', 'color: black;');
+            }
+
+            // Register 2 will be clocked next step?
+            if ( majorValueNextStepR2 == majorValueNextStep )
+            {
+                // Indicate that register 2 will be clocked next step
+                $('#r2').attr('style', 'color: blue;');
+            }
+            else
+            {
+                $('#r2').attr('style', 'color: black;');
+            }
+
+            // Register 3 will be clocked next step?
+            if ( majorValueNextStepR3 == majorValueNextStep )
+            {
+                // Indicate that register 3 will be clocked next step
+                $('#r3').attr('style', 'color: blue;');
             }
             else
             {
@@ -507,69 +549,104 @@
          */
         $("#generateStreamButton").click(function()
         {
-            // Calculate maj() function of course
-            var majorValue = maj($('input[name=r1_8]').val(), $('input[name=r2_10]').val(), $('input[name=r3_10]').val());
-            $('#majResult').text(majorValue);
+            generatedKeyStreamBitsCounter++;
+            $('#generatedStreamCount').text(generatedKeyStreamBitsCounter);
+
+            // Calculate maj() function for the current step
+            var majorValueThisStep = maj($('input[name=r1_8]').val(), $('input[name=r2_10]').val(), $('input[name=r3_10]').val());
 
             // Register 1 is clocked?
-            if ( $('input[name=r1_8]').val() == majorValue )
+            if ( $('input[name=r1_8]').val() == majorValueThisStep )
             {
-                // Indicate that register 1 is clocked
-                $('#r1').attr('style', 'color: blue;');
+                // Register 1 will be shifted, so use the futur value
+                var majorValueNextStepR1 = $('input[name=r1_7]').val();
 
-                // Shift clocked register (do not push a value to register; 0 is the neutral element of XOR)
-                // and get output value for key stream
+                // Shift clocked register (do not push a value to register; 0 is the neutral element of XOR) and get output value for key stream
                 var outputValueRegister1 = shiftRegister1(0);
             }
             else
             {
-                $('#r1').attr('style', 'color: black;');
+                // Register 1 will not be shifted, so use the current value
+                var majorValueNextStepR1 = $('input[name=r1_8]').val();
 
                 // The register is not clocked so the output value is the neutral element of XOR (=0)
                 var outputValueRegister1 = 0;
             }
 
             // Register 2 is clocked?
-            if ( $('input[name=r2_10]').val() == majorValue )
+            if ( $('input[name=r2_10]').val() == majorValueThisStep )
             {
-                // Indicate that register 2 is clocked
-                $('#r2').attr('style', 'color: blue;');
+                // Register 2 will be shifted, so use the futur value
+                var majorValueNextStepR2 = $('input[name=r2_9]').val();
 
-                // Shift clocked register (do not push a value to register; 0 is the neutral element of XOR)
-                // and get output value for key stream
+                // Shift clocked register (do not push a value to register; 0 is the neutral element of XOR) and get output value for key stream
                 var outputValueRegister2 = shiftRegister2(0);
             }
             else
             {
-                $('#r2').attr('style', 'color: black;');
+                // Register 2 will not be shifted, so use the current value
+                var majorValueNextStepR2 = $('input[name=r2_10]').val();
 
                 // The register is not clocked so the output value is the neutral element of XOR (=0)
                 var outputValueRegister2 = 0;
             }
 
             // Register 3 is clocked?
-            if ( $('input[name=r3_10]').val() == majorValue )
+            if ( $('input[name=r3_10]').val() == majorValueThisStep )
             {
-                // Indicate that register 3 is clocked
-                $('#r3').attr('style', 'color: blue;');
+                // Register 3 will be shifted, so use the futur value
+                var majorValueNextStepR3 = $('input[name=r3_9]').val();
 
-                // Shift clocked register (do not push a value to register; 0 is the neutral element of XOR)
-                // and get output value for key stream
+                // Shift clocked register (do not push a value to register; 0 is the neutral element of XOR) and get output value for key stream
                 var outputValueRegister3 = shiftRegister3(0);
             }
             else
             {
-                $('#r3').attr('style', 'color: black;');
+                // Register 3 will not be shifted, so use the current value
+                var majorValueNextStepR3 = $('input[name=r3_10]').val();
 
                 // The register is not clocked so the output value is the neutral element of XOR (=0)
                 var outputValueRegister3 = 0;
             }
 
-            var generatedKeyStreamBit = outputValueRegister1 ^ outputValueRegister2 ^ outputValueRegister3;
-            generatedKeyStreamBitsCounter++;
+            // Calculate maj() function for the next step
+            var majorValueNextStep = maj(majorValueNextStepR1, majorValueNextStepR2, majorValueNextStepR3);
+            $('#majResult').text(majorValueNextStep);
 
-            // Update bit counter on document
-            $('#generatedStreamCount').text(generatedKeyStreamBitsCounter);
+            // Register 1 will be clocked next step?
+            if ( majorValueNextStepR1 == majorValueNextStep )
+            {
+                // Indicate that register 1 will be clocked next step
+                $('#r1').attr('style', 'color: blue;');
+            }
+            else
+            {
+                $('#r1').attr('style', 'color: black;');
+            }
+
+            // Register 2 will be clocked next step?
+            if ( majorValueNextStepR2 == majorValueNextStep )
+            {
+                // Indicate that register 2 will be clocked next step
+                $('#r2').attr('style', 'color: blue;');
+            }
+            else
+            {
+                $('#r2').attr('style', 'color: black;');
+            }
+
+            // Register 3 will be clocked next step?
+            if ( majorValueNextStepR3 == majorValueNextStep )
+            {
+                // Indicate that register 3 will be clocked next step
+                $('#r3').attr('style', 'color: blue;');
+            }
+            else
+            {
+                $('#r3').attr('style', 'color: black;');
+            }
+
+            var generatedKeyStreamBit = outputValueRegister1 ^ outputValueRegister2 ^ outputValueRegister3;
 
             // Output a space after 4 bits to get groups
             if ( generatedKeyStreamBitsCounter % 4 == 0 && i > 0 )
