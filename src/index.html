@@ -421,6 +421,11 @@
             // Get value of current key bit
             var inputValue = $('#key_' + keyBitCount).text();
 
+            // Push current cipher key bit to all registers
+            shiftRegister1(inputValue);
+            shiftRegister2(inputValue);
+            shiftRegister3(inputValue);
+
             // Increment key bit counter
             keyBitCount++;
 
@@ -439,11 +444,6 @@
                 // Manual unhighlight last element
                 $('#key_' + (keyBitCount - 1)).attr('style', 'font-weight: normal;');
             }
-
-            // Push current cipher key bit to all registers
-            shiftRegister1(inputValue);
-            shiftRegister2(inputValue);
-            shiftRegister3(inputValue);
 
             // Calculate maj() function and update spans
             $('#majResult').text(maj($('input[name=r1_8]').val(), $('input[name=r2_10]').val(), $('input[name=r3_10]').val()));
